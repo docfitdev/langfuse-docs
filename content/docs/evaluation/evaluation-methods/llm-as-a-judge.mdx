@@ -320,7 +320,11 @@ Fix the connection or pick a different model, then save again. The same check ru
 
 ### Backfill historical observation scores
 
-Use [batch evaluation](/docs/evaluation/core-concepts#batch-evaluation) to run an LLM-as-a-Judge evaluator on selected historical observations.
+Use [batch evaluation](/docs/evaluation/core-concepts#batch-evaluation) to run an LLM-as-a-Judge evaluator on selected historical observations. You can also start a batch run through the [`runBatchEvaluation` MCP tool](/docs/evaluation/core-concepts#batch-evaluation-mcp).
+
+Batch evaluation only selects observations inside your organization's plan data-access window. Langfuse adds a `startTime >= accessFloor` filter to the selection on the server, so older observations are not evaluated. Admins remain unlimited.
+
+The scores and the [execution traces](#debug-llm-as-a-judge-executions) of a batch run carry the batch action ID as `batch_action_id` in their metadata. Use it to find all outputs of one run.
 
 ## Debug LLM-as-a-Judge Executions
 
