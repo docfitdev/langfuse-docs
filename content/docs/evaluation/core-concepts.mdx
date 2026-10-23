@@ -144,6 +144,31 @@ To use an LLM-as-a-Judge evaluator for batch evaluation, enable the [Langfuse v4
 
 The resulting scores are attached to the matching observations in each selected trace.
 
+Batch evaluation only selects observations inside your organization's plan data-access window. Langfuse enforces this on the server by adding a `startTime >= accessFloor` filter to the selection, so observations older than the window are never evaluated. This applies to plans with a retention limit, such as Hobby and Core, and to batch evaluations created in the UI and through the MCP tool. Admins remain unlimited.
+
+Every execution trace and score produced by a batch run carries the batch action ID as `batch_action_id` in its metadata, so you can group and query all outputs of one run together.
+
+### Run batch evaluation via MCP [#batch-evaluation-mcp]
+
+Agents and other MCP clients can start a batch evaluation with the `runBatchEvaluation` tool of the [MCP server](/docs/api-and-data-platform/features/mcp-server). It runs saved evaluators over existing observations that match a filter and time range, like **Run Evaluation** in the observations table. The run is queued as an asynchronous batch action, and the tool returns the batch action ID.
+
+| Parameter        | Description                                                                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `evaluatorIds`   | IDs of the evaluators to run, as returned by `listEvaluators`. Each must be observation-scoped and not attached to a trace- or dataset-level evaluation rule.                                |
+| `fromStartTime`  | Optional inclusive lower bound on observation `startTime`, as an ISO 8601 timestamp with timezone.                                                                                           |
+| `toStartTime`    | Optional exclusive upper bound on observation `startTime`, as an ISO 8601 timestamp with timezone.                                                                                           |
+| `filter`         | Optional observation filters in the `listObservations` filter format. Call `getObservationFilterSchema` for accepted columns and operators. The full-text `matches` operator isn't supported. |
+| `sampling`       | Fraction of matching observations to evaluate, between 0 and 1. Defaults to 1.                                                                                                               |
+| `rowLimit`       | Maximum number of observations to evaluate. Without it, the run is rejected when more observations match than the instance's batch evaluation limit.                                         |
+
+Preview the selection with `listObservations` using the same filter and time range before you run. The tool executes every selected evaluator on every selected observation, so it can incur model or code execution cost.
+
+- **Permission:** requires the `evaluationRule:CUD` scope.
+- **Approval:** the in-app agent asks for human approval before it runs the tool.
+- **Availability:** the tool is only available when `LANGFUSE_MIGRATION_V4_ALLOW_PREVIEW_OPT_IN` is `true` on the instance.
+
+See the [MCP Reference](https://mcp.reference.langfuse.com) for the full input schema.
+
 ## Experiments [#experiments]
 
 An experiment runs your application against a dataset and evaluates the outputs. This is how you test changes before deploying to production.
